@@ -1,26 +1,68 @@
 import { Injectable } from '@nestjs/common';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
+import { DBError, DatabaseService } from 'src/database/database.service';
+import { DBErrors } from 'src/database/database.models';
+import { v4 as genUuid, validate as validateUuid } from 'uuid';
+import { Track } from './entities/track.entity';
 
 @Injectable()
 export class TracksService {
-  create(createTrackDto: CreateTrackDto) {
-    return 'This action adds a new track';
-  }
+  private tracks = this.database.tracks;
+
+  constructor(private database: DatabaseService) {}
 
   findAll() {
-    return `This action returns all tracks`;
+    return Array.from(this.tracks.values());
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} track`;
+  findOne(id: string) {
+    if (!validateUuid(id)) {
+      return new DBError(DBErrors.UUID);
+    }
+
+    const track = this.tracks.get(id);
+    if (!track) {
+      return new DBError(DBErrors.NOT_FOUND);
+    }
+    return track;
   }
 
-  update(id: number, updateTrackDto: UpdateTrackDto) {
-    return `This action updates a #${id} track`;
+  create(dto: CreateTrackDto) {
+    const track = new Track({
+      ...dto,
+      id: genUuid(),
+    });
+    this.tracks.set(track.id, track);
+    return track;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} track`;
+  update(id: string, dto: UpdateTrackDto) {
+    if (!validateUuid(id)) {
+      return new DBError(DBErrors.UUID);
+    }
+
+    const track = this.tracks.get(id);
+    if (!track) {
+      return new DBError(DBErrors.NOT_FOUND);
+    }
+
+    Object.keys(dto).forEach((param) => {
+      track[param] = dto[param];
+    });
+    return track;
+  }
+
+  remove(id: string) {
+    if (!validateUuid(id)) {
+      return new DBError(DBErrors.UUID);
+    }
+
+    const track = this.tracks.get(id);
+    if (!track) {
+      return new DBError(DBErrors.NOT_FOUND);
+    }
+    this.tracks.delete(track.id);
+    return null;
   }
 }

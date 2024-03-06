@@ -6,8 +6,6 @@ import {
   Param,
   Delete,
   Put,
-  HttpException,
-  HttpStatus,
   HttpCode,
   ClassSerializerInterceptor,
   UseInterceptors,
@@ -16,47 +14,47 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { DBError } from 'src/database/database.service';
-import { DBErrors } from 'src/database/database.models';
+import { processError } from 'src/utils/errors';
 
 @Controller('user')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseInterceptors(ClassSerializerInterceptor)
   @Post()
+  @UseInterceptors(ClassSerializerInterceptor)
   create(@Body() createUserDto: CreateUserDto) {
     const result = this.usersService.create(createUserDto);
     if (result instanceof DBError) {
-      this.processError(result);
+      processError(result, 'User');
     }
     return result;
   }
 
-  @UseInterceptors(ClassSerializerInterceptor)
   @Get()
+  @UseInterceptors(ClassSerializerInterceptor)
   findAll() {
     return this.usersService.findAll();
   }
 
-  @UseInterceptors(ClassSerializerInterceptor)
   @Get(':id')
+  @UseInterceptors(ClassSerializerInterceptor)
   findOne(@Param('id') id: string) {
     const result = this.usersService.findOne(id);
     if (result instanceof DBError) {
-      this.processError(result, id);
+      processError(result, 'User', id);
     }
     return result;
   }
 
-  @UseInterceptors(ClassSerializerInterceptor)
   @Put(':id')
+  @UseInterceptors(ClassSerializerInterceptor)
   update(
     @Param('id') id: string,
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
     const result = this.usersService.update(id, updatePasswordDto);
     if (result instanceof DBError) {
-      this.processError(result, id);
+      processError(result, 'User', id);
     }
     return result;
   }
@@ -66,22 +64,7 @@ export class UsersController {
   remove(@Param('id') id: string) {
     const result = this.usersService.remove(id);
     if (result instanceof DBError) {
-      this.processError(result, id);
-    }
-  }
-
-  processError(error: DBError, id?: string) {
-    if (error.code === DBErrors.NOT_FOUND) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-    }
-    if (error.code === DBErrors.UUID) {
-      throw new HttpException(
-        `${id} is not valid UUID`,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    if (error.code === DBErrors.PASSWORD) {
-      throw new HttpException('Invalid old password', HttpStatus.FORBIDDEN);
+      processError(result, 'User', id);
     }
   }
 }

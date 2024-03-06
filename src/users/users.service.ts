@@ -12,6 +12,10 @@ export class UsersService {
 
   constructor(private database: DatabaseService) {}
 
+  findAll() {
+    return Array.from(this.users.values());
+  }
+
   findOne(id: string) {
     if (!validateUuid(id)) {
       return new DBError(DBErrors.UUID);
@@ -21,12 +25,7 @@ export class UsersService {
     if (!user) {
       return new DBError(DBErrors.NOT_FOUND);
     }
-
     return user;
-  }
-
-  findAll() {
-    return Array.from(this.users.values());
   }
 
   create(dto: CreateUserDto) {
@@ -72,7 +71,6 @@ export class UsersService {
       return new DBError(DBErrors.NOT_FOUND);
     }
     this.users.delete(user.id);
-
     return null;
   }
 }

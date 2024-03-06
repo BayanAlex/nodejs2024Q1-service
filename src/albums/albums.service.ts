@@ -1,26 +1,75 @@
 import { Injectable } from '@nestjs/common';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
+import { DBError, DatabaseService } from 'src/database/database.service';
+import { DBErrors } from 'src/database/database.models';
+import { v4 as genUuid, validate as validateUuid } from 'uuid';
+import { Album } from './entities/album.entity';
 
 @Injectable()
 export class AlbumsService {
-  create(createAlbumDto: CreateAlbumDto) {
-    return 'This action adds a new album';
-  }
+  private albums = this.database.albums;
+
+  constructor(private database: DatabaseService) {}
 
   findAll() {
-    return `This action returns all albums`;
+    return Array.from(this.albums.values());
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} album`;
+  findOne(id: string) {
+    if (!validateUuid(id)) {
+      return new DBError(DBErrors.UUID);
+    }
+
+    const album = this.albums.get(id);
+    if (!album) {
+      return new DBError(DBErrors.NOT_FOUND);
+    }
+    return album;
   }
 
-  update(id: number, updateAlbumDto: UpdateAlbumDto) {
-    return `This action updates a #${id} album`;
+  create(dto: CreateAlbumDto) {
+    const album = new Album({
+      ...dto,
+      id: genUuid(),
+    });
+    this.albums.set(album.id, album);
+    return album;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} album`;
+  update(id: string, dto: UpdateAlbumDto) {
+    if (!validateUuid(id)) {
+      return new DBError(DBErrors.UUID);
+    }
+
+    const album = this.albums.get(id);
+    if (!album) {
+      return new DBError(DBErrors.NOT_FOUND);
+    }
+
+    Object.keys(dto).forEach((param) => {
+      album[param] = dto[param];
+    });
+    return album;
+  }
+
+  remove(id: string) {
+    if (!validateUuid(id)) {
+      return new DBError(DBErrors.UUID);
+    }
+
+    const album = this.albums.get(id);
+    if (!album) {
+      return new DBError(DBErrors.NOT_FOUND);
+    }
+
+    Array.from(this.database.tracks.values()).forEach((track) => {
+      if (track.albumId === album.id) {
+        track.albumId = null;
+      }
+    });
+
+    this.albums.delete(album.id);
+    return null;
   }
 }
