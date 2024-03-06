@@ -9,6 +9,8 @@ import {
   HttpException,
   HttpStatus,
   HttpCode,
+  ClassSerializerInterceptor,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -20,6 +22,7 @@ import { DBErrors } from 'src/database/database.models';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @UseInterceptors(ClassSerializerInterceptor)
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     const result = this.usersService.create(createUserDto);
@@ -29,11 +32,13 @@ export class UsersController {
     return result;
   }
 
+  @UseInterceptors(ClassSerializerInterceptor)
   @Get()
   findAll() {
     return this.usersService.findAll();
   }
 
+  @UseInterceptors(ClassSerializerInterceptor)
   @Get(':id')
   findOne(@Param('id') id: string) {
     const result = this.usersService.findOne(id);
@@ -43,6 +48,7 @@ export class UsersController {
     return result;
   }
 
+  @UseInterceptors(ClassSerializerInterceptor)
   @Put(':id')
   update(
     @Param('id') id: string,

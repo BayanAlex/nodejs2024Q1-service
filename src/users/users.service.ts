@@ -12,12 +12,6 @@ export class UsersService {
 
   constructor(private database: DatabaseService) {}
 
-  omitPassword(user: User) {
-    const result = { ...user };
-    delete result.password;
-    return result;
-  }
-
   findOne(id: string) {
     if (!validateUuid(id)) {
       return new DBError(DBErrors.UUID);
@@ -28,26 +22,24 @@ export class UsersService {
       return new DBError(DBErrors.NOT_FOUND);
     }
 
-    return this.omitPassword(user);
+    return user;
   }
 
   findAll() {
-    return Array.from(this.users.values()).map((user) =>
-      this.omitPassword(user),
-    );
+    return Array.from(this.users.values());
   }
 
   create(dto: CreateUserDto) {
     const createdAt = Date.now();
-    const user: User = {
+    const user = new User({
       ...dto,
       id: genUuid(),
       version: 1,
       createdAt: createdAt,
       updatedAt: createdAt,
-    };
+    });
     this.users.set(user.id, user);
-    return this.omitPassword(user);
+    return user;
   }
 
   update(id: string, dto: UpdatePasswordDto) {
@@ -67,7 +59,7 @@ export class UsersService {
     user.password = dto.newPassword;
     user.updatedAt = Date.now();
     user.version += 1;
-    return this.omitPassword(user);
+    return user;
   }
 
   remove(id: string) {
