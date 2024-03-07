@@ -62,6 +62,12 @@ export class TracksService {
     if (!track) {
       return new DBError(DBErrors.NOT_FOUND);
     }
+
+    const favIndex = this.database.favorites.tracks.indexOf(id);
+    if (favIndex > -1) {
+      this.database.favorites.tracks.splice(favIndex, 1);
+    }
+
     this.tracks.delete(track.id);
     return null;
   }

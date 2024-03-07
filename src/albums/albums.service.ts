@@ -69,6 +69,11 @@ export class AlbumsService {
       }
     });
 
+    const favIndex = this.database.favorites.albums.indexOf(id);
+    if (favIndex > -1) {
+      this.database.favorites.albums.splice(favIndex, 1);
+    }
+
     this.albums.delete(album.id);
     return null;
   }

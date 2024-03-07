@@ -76,6 +76,11 @@ export class ArtistsService {
       }
     });
 
+    const favIndex = this.database.favorites.artists.indexOf(id);
+    if (favIndex > -1) {
+      this.database.favorites.artists.splice(favIndex, 1);
+    }
+
     this.artists.delete(artist.id);
     return null;
   }

@@ -16,5 +16,5 @@ export class DatabaseService {
   artists = new Map<string, Artist>();
   tracks = new Map<string, Track>();
   albums = new Map<string, Album>();
-  favorites: Favorites;
+  favorites = new Favorites();
 }

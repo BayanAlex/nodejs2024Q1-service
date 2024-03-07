@@ -6,10 +6,19 @@ export function processError(error: DBError, entity: string, id?: string) {
   if (error.code === DBErrors.NOT_FOUND) {
     throw new HttpException(`${entity} not found`, HttpStatus.NOT_FOUND);
   }
+
   if (error.code === DBErrors.UUID) {
     throw new HttpException(`${id} is not valid UUID`, HttpStatus.BAD_REQUEST);
   }
+
   if (error.code === DBErrors.PASSWORD) {
     throw new HttpException('Invalid old password', HttpStatus.FORBIDDEN);
+  }
+
+  if (error.code === DBErrors.UNPROCESSABLE_ENTITY) {
+    throw new HttpException(
+      `${entity} not found`,
+      HttpStatus.UNPROCESSABLE_ENTITY,
+    );
   }
 }
