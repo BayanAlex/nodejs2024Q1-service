@@ -8,7 +8,7 @@
 ## Downloading
 
 ```
-git clone {repository URL}
+git clone https://github.com/BayanAlex/nodejs2024Q1-service
 ```
 
 ## Installing NPM modules
@@ -16,6 +16,16 @@ git clone {repository URL}
 ```
 npm install
 ```
+
+## Building application
+
+```
+npm run build
+```
+
+## Configuring application
+
+Create `.env` file in project root and set `PORT`. You can use `.env.example` as a template.
 
 ## Running application
 
