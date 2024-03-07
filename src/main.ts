@@ -13,7 +13,7 @@ async function bootstrap() {
   const file = await readFile('./doc/api.yaml', 'utf8');
   const swaggerDocument = YAML.parse(file);
   swaggerUi.setup(swaggerDocument);
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  app.use('/doc', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
   await app.listen(process.env.PORT);
 }
