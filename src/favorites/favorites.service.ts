@@ -37,7 +37,10 @@ export class FavoritesService {
       return new DBError(DBErrors.UNPROCESSABLE_ENTITY);
     }
 
-    this.favorites[`${entity}s`].push(id);
+    if (!this.favorites[`${entity}s`].includes(id)) {
+      this.favorites[`${entity}s`].push(id);
+    }
+
     return null;
   }
 
