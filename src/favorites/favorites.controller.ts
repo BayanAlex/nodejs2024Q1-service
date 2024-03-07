@@ -24,7 +24,11 @@ export class FavoritesController {
   @Delete('track/:id')
   @HttpCode(204)
   removeTrack(@Param('id') id: string) {
-    return this.favoritesService.remove('track', id);
+    const result = this.favoritesService.remove('track', id);
+    if (result instanceof DBError) {
+      processError(result, 'Track', id);
+    }
+    return result;
   }
 
   @Post('artist/:id')
@@ -39,7 +43,11 @@ export class FavoritesController {
   @Delete('artist/:id')
   @HttpCode(204)
   removeArtist(@Param('id') id: string) {
-    return this.favoritesService.remove('artist', id);
+    const result = this.favoritesService.remove('artist', id);
+    if (result instanceof DBError) {
+      processError(result, 'Artist', id);
+    }
+    return result;
   }
 
   @Post('album/:id')
@@ -54,6 +62,10 @@ export class FavoritesController {
   @Delete('album/:id')
   @HttpCode(204)
   removeAlbum(@Param('id') id: string) {
-    return this.favoritesService.remove('album', id);
+    const result = this.favoritesService.remove('album', id);
+    if (result instanceof DBError) {
+      processError(result, 'Album', id);
+    }
+    return result;
   }
 }

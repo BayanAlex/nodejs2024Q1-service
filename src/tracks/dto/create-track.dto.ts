@@ -1,4 +1,10 @@
-import { IsInt, IsNotEmpty, IsString, ValidateIf } from 'class-validator';
+import {
+  IsInt,
+  IsNotEmpty,
+  IsPositive,
+  IsString,
+  ValidateIf,
+} from 'class-validator';
 
 export class CreateTrackDto {
   @IsNotEmpty()
@@ -7,6 +13,7 @@ export class CreateTrackDto {
 
   @IsNotEmpty()
   @IsInt()
+  @IsPositive()
   duration: number;
 
   @IsNotEmpty()
