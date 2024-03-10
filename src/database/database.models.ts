@@ -1,0 +1,6 @@
+export enum DBErrors {
+  PASSWORD,
+  NOT_FOUND,
+  UUID,
+  UNPROCESSABLE_ENTITY,
+}
