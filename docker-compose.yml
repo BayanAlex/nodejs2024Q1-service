@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: alexshigida/rest-service:postgres
+    container_name: postgres
+    build:
+      dockerfile: ./postgres/Dockerfile
+    ports:
+     - ${DB_EXT_PORT}:${DB_INT_PORT}
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    networks:
+      - hls-net
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - pglogs:/var/log/postgresql
+    restart: always
+
+  hls:
+    image: alexshigida/rest-service:hls
+    container_name: hls
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on: 
+      - postgres
+    env_file:
+      - .env
+    ports:
+     - ${PORT}:${PORT}
+    volumes:
+      - hls-src:/usr/hls/src:rw
+      - /usr/hls/node_modules
+    networks:
+      - hls-net
+    restart: always
+
+volumes:
+  hls-src:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./src
+      o: bind
+  pgdata:
+  pglogs:
+
+networks:
+  hls-net:
+    name: hls-net
+    driver: bridge
