@@ -13,10 +13,10 @@ import {
 import { TracksService } from './tracks.service';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
-import { processError } from 'src/utils/errors';
-import { DBError } from 'src/database/database.service';
+import { RemoveFavIdInterceptor } from 'src/interceptors/remove-fav-id.interceptor';
 
 @Controller('track')
+@UseInterceptors(RemoveFavIdInterceptor)
 export class TracksController {
   constructor(private readonly tracksService: TracksService) {}
 
@@ -35,29 +35,18 @@ export class TracksController {
   @Get(':id')
   @UseInterceptors(ClassSerializerInterceptor)
   findOne(@Param('id') id: string) {
-    const result = this.tracksService.findOne(id);
-    if (result instanceof DBError) {
-      processError(result, 'Track', id);
-    }
     return this.tracksService.findOne(id);
   }
 
   @Put(':id')
   @UseInterceptors(ClassSerializerInterceptor)
   update(@Param('id') id: string, @Body() updateTrackDto: UpdateTrackDto) {
-    const result = this.tracksService.update(id, updateTrackDto);
-    if (result instanceof DBError) {
-      processError(result, 'Track', id);
-    }
-    return result;
+    return this.tracksService.update(id, updateTrackDto);
   }
 
   @Delete(':id')
   @HttpCode(204)
-  remove(@Param('id') id: string) {
-    const result = this.tracksService.remove(id);
-    if (result instanceof DBError) {
-      processError(result, 'Track', id);
-    }
+  async remove(@Param('id') id: string) {
+    await this.tracksService.remove(id);
   }
 }

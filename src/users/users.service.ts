@@ -1,76 +1,65 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { DBError, DatabaseService } from 'src/database/database.service';
-import { v4 as genUuid, validate as validateUuid } from 'uuid';
 import { UpdatePasswordDto } from 'src/users/dto/update-password.dto';
-import { User } from './entities/user.entity';
-import { DBErrors } from 'src/database/database.models';
+import { PrismaService } from 'src/prisma/prisma.service';
+import {
+  AppInvalidPasswordException,
+  AppNotFoundException,
+} from 'src/exceptions/exceptions.classes';
+import {
+  checkUuid,
+  processNotFoundException,
+} from 'src/exceptions/exceptions.functions';
 
 @Injectable()
 export class UsersService {
-  private users = this.database.users;
-
-  constructor(private database: DatabaseService) {}
+  constructor(private prisma: PrismaService) {}
 
   findAll() {
-    return Array.from(this.users.values());
+    return this.prisma.user.findMany();
   }
 
-  findOne(id: string) {
-    if (!validateUuid(id)) {
-      return new DBError(DBErrors.UUID);
-    }
-
-    const user = this.users.get(id);
+  async findOne(id: string) {
+    checkUuid(id);
+    const user = await this.prisma.user.findFirst({ where: { id } });
     if (!user) {
-      return new DBError(DBErrors.NOT_FOUND);
+      throw new AppNotFoundException('User');
     }
     return user;
   }
 
   create(dto: CreateUserDto) {
-    const createdAt = Date.now();
-    const user = new User({
-      ...dto,
-      id: genUuid(),
-      version: 1,
-      createdAt: createdAt,
-      updatedAt: createdAt,
-    });
-    this.users.set(user.id, user);
-    return user;
+    return this.prisma.user.create({ data: dto });
   }
 
-  update(id: string, dto: UpdatePasswordDto) {
-    if (!validateUuid(id)) {
-      return new DBError(DBErrors.UUID);
-    }
+  async update(id: string, dto: UpdatePasswordDto) {
+    checkUuid(id);
+    const user = await this.prisma.user.findFirst({
+      where: { id },
+      select: { password: true },
+    });
 
-    const user = this.users.get(id);
     if (!user) {
-      return new DBError(DBErrors.NOT_FOUND);
+      throw new AppNotFoundException('User');
     }
 
     if (user.password !== dto.oldPassword) {
-      return new DBError(DBErrors.PASSWORD);
+      throw new AppInvalidPasswordException();
     }
 
-    user.password = dto.newPassword;
-    user.updatedAt = Date.now();
-    user.version += 1;
-    return user;
+    return this.prisma.user.update({
+      where: { id },
+      data: { password: dto.newPassword, version: { increment: 1 } },
+    });
   }
 
-  remove(id: string) {
-    if (!validateUuid(id)) {
-      return new DBError(DBErrors.UUID);
+  async remove(id: string) {
+    checkUuid(id);
+    try {
+      await this.prisma.user.delete({ where: { id } });
+    } catch (error) {
+      processNotFoundException(error, 'User');
     }
-
-    const user = this.users.get(id);
-    if (!user) {
-      return new DBError(DBErrors.NOT_FOUND);
-    }
-    this.users.delete(user.id);
     return null;
   }
 }

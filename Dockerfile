@@ -1,4 +1,4 @@
-FROM node:21.6.1-alpine
+FROM node:21.7.1-alpine
 
 WORKDIR /usr/hls
 
@@ -7,6 +7,8 @@ COPY package*.json .
 RUN npm i
 
 COPY . .
+
+RUN npx prisma generate
 
 ENV PORT 4000
 

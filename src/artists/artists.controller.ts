@@ -13,10 +13,10 @@ import {
 import { ArtistsService } from './artists.service';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
-import { DBError } from 'src/database/database.service';
-import { processError } from 'src/utils/errors';
+import { RemoveFavIdInterceptor } from 'src/interceptors/remove-fav-id.interceptor';
 
 @Controller('artist')
+@UseInterceptors(RemoveFavIdInterceptor)
 export class ArtistsController {
   constructor(private readonly artistsService: ArtistsService) {}
 
@@ -35,29 +35,18 @@ export class ArtistsController {
   @Get(':id')
   @UseInterceptors(ClassSerializerInterceptor)
   findOne(@Param('id') id: string) {
-    const result = this.artistsService.findOne(id);
-    if (result instanceof DBError) {
-      processError(result, 'Artist', id);
-    }
     return this.artistsService.findOne(id);
   }
 
   @Put(':id')
   @UseInterceptors(ClassSerializerInterceptor)
   update(@Param('id') id: string, @Body() updateArtistDto: UpdateArtistDto) {
-    const result = this.artistsService.update(id, updateArtistDto);
-    if (result instanceof DBError) {
-      processError(result, 'Artist', id);
-    }
-    return result;
+    return this.artistsService.update(id, updateArtistDto);
   }
 
   @Delete(':id')
   @HttpCode(204)
-  remove(@Param('id') id: string) {
-    const result = this.artistsService.remove(id);
-    if (result instanceof DBError) {
-      processError(result, 'Artist', id);
-    }
+  async remove(@Param('id') id: string) {
+    await this.artistsService.remove(id);
   }
 }

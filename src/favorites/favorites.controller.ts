@@ -1,9 +1,17 @@
-import { Controller, Get, Post, Param, Delete, HttpCode } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Delete,
+  HttpCode,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FavoritesService } from './favorites.service';
-import { DBError } from 'src/database/database.service';
-import { processError } from 'src/utils/errors';
+import { RemoveFavIdInterceptor } from 'src/interceptors/remove-fav-id.interceptor';
 
 @Controller('favs')
+@UseInterceptors(RemoveFavIdInterceptor)
 export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
 
@@ -14,58 +22,34 @@ export class FavoritesController {
 
   @Post('track/:id')
   createTrack(@Param('id') id: string) {
-    const result = this.favoritesService.create('track', id);
-    if (result instanceof DBError) {
-      processError(result, 'Track', id);
-    }
-    return result;
+    return this.favoritesService.create('Track', id);
   }
 
   @Delete('track/:id')
   @HttpCode(204)
-  removeTrack(@Param('id') id: string) {
-    const result = this.favoritesService.remove('track', id);
-    if (result instanceof DBError) {
-      processError(result, 'Track', id);
-    }
-    return result;
+  async removeTrack(@Param('id') id: string) {
+    await this.favoritesService.remove('Track', id);
   }
 
   @Post('artist/:id')
   createArtist(@Param('id') id: string) {
-    const result = this.favoritesService.create('artist', id);
-    if (result instanceof DBError) {
-      processError(result, 'Artist', id);
-    }
-    return result;
+    return this.favoritesService.create('Artist', id);
   }
 
   @Delete('artist/:id')
   @HttpCode(204)
-  removeArtist(@Param('id') id: string) {
-    const result = this.favoritesService.remove('artist', id);
-    if (result instanceof DBError) {
-      processError(result, 'Artist', id);
-    }
-    return result;
+  async removeArtist(@Param('id') id: string) {
+    await this.favoritesService.remove('Artist', id);
   }
 
   @Post('album/:id')
   createAlbum(@Param('id') id: string) {
-    const result = this.favoritesService.create('album', id);
-    if (result instanceof DBError) {
-      processError(result, 'Album', id);
-    }
-    return result;
+    return this.favoritesService.create('Album', id);
   }
 
   @Delete('album/:id')
   @HttpCode(204)
-  removeAlbum(@Param('id') id: string) {
-    const result = this.favoritesService.remove('album', id);
-    if (result instanceof DBError) {
-      processError(result, 'Album', id);
-    }
-    return result;
+  async removeAlbum(@Param('id') id: string) {
+    await this.favoritesService.remove('Album', id);
   }
 }

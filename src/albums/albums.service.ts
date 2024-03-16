@@ -1,80 +1,50 @@
 import { Injectable } from '@nestjs/common';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
-import { DBError, DatabaseService } from 'src/database/database.service';
-import { DBErrors } from 'src/database/database.models';
-import { v4 as genUuid, validate as validateUuid } from 'uuid';
-import { Album } from './entities/album.entity';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { AppNotFoundException } from 'src/exceptions/exceptions.classes';
+import {
+  checkUuid,
+  processNotFoundException,
+} from 'src/exceptions/exceptions.functions';
 
 @Injectable()
 export class AlbumsService {
-  private albums = this.database.albums;
-
-  constructor(private database: DatabaseService) {}
+  constructor(private prisma: PrismaService) {}
 
   findAll() {
-    return Array.from(this.albums.values());
+    return this.prisma.album.findMany();
   }
 
-  findOne(id: string) {
-    if (!validateUuid(id)) {
-      return new DBError(DBErrors.UUID);
-    }
-
-    const album = this.albums.get(id);
+  async findOne(id: string) {
+    checkUuid(id);
+    const album = await this.prisma.album.findFirst({ where: { id } });
     if (!album) {
-      return new DBError(DBErrors.NOT_FOUND);
+      throw new AppNotFoundException('Album');
     }
     return album;
   }
 
   create(dto: CreateAlbumDto) {
-    const album = new Album({
-      ...dto,
-      id: genUuid(),
-    });
-    this.albums.set(album.id, album);
-    return album;
+    return this.prisma.album.create({ data: dto });
   }
 
-  update(id: string, dto: UpdateAlbumDto) {
-    if (!validateUuid(id)) {
-      return new DBError(DBErrors.UUID);
+  async update(id: string, dto: UpdateAlbumDto) {
+    checkUuid(id);
+    try {
+      return await this.prisma.album.update({ where: { id }, data: dto });
+    } catch (error) {
+      processNotFoundException(error, 'Album');
     }
-
-    const album = this.albums.get(id);
-    if (!album) {
-      return new DBError(DBErrors.NOT_FOUND);
-    }
-
-    Object.keys(dto).forEach((param) => {
-      album[param] = dto[param];
-    });
-    return album;
   }
 
-  remove(id: string) {
-    if (!validateUuid(id)) {
-      return new DBError(DBErrors.UUID);
+  async remove(id: string) {
+    checkUuid(id);
+    try {
+      await this.prisma.album.delete({ where: { id } });
+    } catch (error) {
+      processNotFoundException(error, 'Album');
     }
-
-    const album = this.albums.get(id);
-    if (!album) {
-      return new DBError(DBErrors.NOT_FOUND);
-    }
-
-    Array.from(this.database.tracks.values()).forEach((track) => {
-      if (track.albumId === album.id) {
-        track.albumId = null;
-      }
-    });
-
-    const favIndex = this.database.favorites.albums.indexOf(id);
-    if (favIndex > -1) {
-      this.database.favorites.albums.splice(favIndex, 1);
-    }
-
-    this.albums.delete(album.id);
     return null;
   }
 }

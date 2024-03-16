@@ -1,87 +1,50 @@
 import { Injectable } from '@nestjs/common';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
-import { v4 as genUuid, validate as validateUuid } from 'uuid';
-import { Artist } from './entities/artist.entity';
-import { DBError, DatabaseService } from 'src/database/database.service';
-import { DBErrors } from 'src/database/database.models';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { AppNotFoundException } from 'src/exceptions/exceptions.classes';
+import {
+  checkUuid,
+  processNotFoundException,
+} from 'src/exceptions/exceptions.functions';
 
 @Injectable()
 export class ArtistsService {
-  private artists = this.database.artists;
-
-  constructor(private database: DatabaseService) {}
+  constructor(private prisma: PrismaService) {}
 
   findAll() {
-    return Array.from(this.artists.values());
+    return this.prisma.artist.findMany();
   }
 
-  findOne(id: string) {
-    if (!validateUuid(id)) {
-      return new DBError(DBErrors.UUID);
-    }
-
-    const artist = this.artists.get(id);
+  async findOne(id: string) {
+    checkUuid(id);
+    const artist = await this.prisma.artist.findFirst({ where: { id } });
     if (!artist) {
-      return new DBError(DBErrors.NOT_FOUND);
+      throw new AppNotFoundException('Artist');
     }
-
     return artist;
   }
 
   create(dto: CreateArtistDto) {
-    const artist = new Artist({
-      ...dto,
-      id: genUuid(),
-    });
-    this.artists.set(artist.id, artist);
-    return artist;
+    return this.prisma.artist.create({ data: dto });
   }
 
-  update(id: string, dto: UpdateArtistDto) {
-    if (!validateUuid(id)) {
-      return new DBError(DBErrors.UUID);
+  async update(id: string, dto: UpdateArtistDto) {
+    checkUuid(id);
+    try {
+      return await this.prisma.artist.update({ where: { id }, data: dto });
+    } catch (error) {
+      processNotFoundException(error, 'Artist');
     }
-
-    const artist = this.artists.get(id);
-    if (!artist) {
-      return new DBError(DBErrors.NOT_FOUND);
-    }
-
-    Object.keys(dto).forEach((param) => {
-      artist[param] = dto[param];
-    });
-    return artist;
   }
 
-  remove(id: string) {
-    if (!validateUuid(id)) {
-      return new DBError(DBErrors.UUID);
+  async remove(id: string) {
+    checkUuid(id);
+    try {
+      await this.prisma.artist.delete({ where: { id } });
+    } catch (error) {
+      processNotFoundException(error, 'Artist');
     }
-
-    const artist = this.artists.get(id);
-    if (!artist) {
-      return new DBError(DBErrors.NOT_FOUND);
-    }
-
-    Array.from(this.database.albums.values()).forEach((album) => {
-      if (album.artistId === artist.id) {
-        album.artistId = null;
-      }
-    });
-
-    Array.from(this.database.tracks.values()).forEach((track) => {
-      if (track.artistId === artist.id) {
-        track.artistId = null;
-      }
-    });
-
-    const favIndex = this.database.favorites.artists.indexOf(id);
-    if (favIndex > -1) {
-      this.database.favorites.artists.splice(favIndex, 1);
-    }
-
-    this.artists.delete(artist.id);
     return null;
   }
 }

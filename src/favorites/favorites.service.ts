@@ -1,62 +1,83 @@
 import { Injectable } from '@nestjs/common';
-import { DBError, DatabaseService } from 'src/database/database.service';
-import { FavoritesResponse } from './entities/favorite.entity';
-import { DBErrors } from 'src/database/database.models';
-import { validate as validateUuid } from 'uuid';
-import { Track } from 'src/tracks/entities/track.entity';
-import { Album } from 'src/albums/entities/album.entity';
-import { Artist } from 'src/artists/entities/artist.entity';
+import { PrismaService } from 'src/prisma/prisma.service';
+import {
+  AppNotFoundException,
+  AppUnprocessableEntityException,
+} from 'src/exceptions/exceptions.classes';
+import { checkUuid } from 'src/exceptions/exceptions.functions';
 
 @Injectable()
 export class FavoritesService {
-  private favorites = this.database.favorites;
-  private tracks = this.database.tracks;
-  private albums = this.database.albums;
-  private artists = this.database.artists;
+  constructor(private prisma: PrismaService) {}
 
-  constructor(private database: DatabaseService) {}
+  findAll() {
+    return this.prisma.favorites.findFirst({
+      select: { albums: true, artists: true, tracks: true },
+    });
+  }
 
-  findAll(): FavoritesResponse {
-    const getEntity = <T>(entity: 'tracks' | 'albums' | 'artists') =>
-      this.favorites[`${entity}`].map((id) => this[`${entity}`].get(id)) as T[];
-
-    return {
-      tracks: getEntity<Track>('tracks'),
-      albums: getEntity<Album>('albums'),
-      artists: getEntity<Artist>('artists'),
+  async create(entity: 'Track' | 'Album' | 'Artist', id: string) {
+    checkUuid(id);
+    const favoritesId = (await this.prisma.favorites.findFirst()).id;
+    const updateParams = {
+      where: { id },
+      data: { favoritesId },
     };
+
+    try {
+      switch (entity) {
+        case 'Track':
+          await this.prisma.track.update(updateParams);
+          break;
+
+        case 'Album':
+          await this.prisma.album.update(updateParams);
+          break;
+
+        case 'Artist':
+          await this.prisma.artist.update(updateParams);
+          break;
+      }
+    } catch (error) {
+      if (error.code === 'P2025') {
+        throw new AppUnprocessableEntityException(entity);
+      }
+    }
+
+    return { message: `${entity} successfully added to favorites` };
   }
 
-  create(entity: 'track' | 'album' | 'artist', id: string) {
-    if (!validateUuid(id)) {
-      return new DBError(DBErrors.UUID);
+  async remove(entity: 'Track' | 'Album' | 'Artist', id: string) {
+    checkUuid(id);
+    const favoritesId = (await this.prisma.favorites.findFirst()).id;
+    const updateParams = {
+      where: { id },
+      data: { favoritesId: null },
+    };
+
+    switch (entity) {
+      case 'Track':
+        if (!this.prisma.track.findFirst({ where: { id, favoritesId } })) {
+          throw new AppNotFoundException(entity);
+        }
+        await this.prisma.track.update(updateParams);
+        break;
+
+      case 'Album':
+        if (!this.prisma.album.findFirst({ where: { id, favoritesId } })) {
+          throw new AppNotFoundException(entity);
+        }
+        await this.prisma.album.update(updateParams);
+        break;
+
+      case 'Artist':
+        if (!this.prisma.artist.findFirst({ where: { id, favoritesId } })) {
+          throw new AppNotFoundException(entity);
+        }
+        await this.prisma.artist.update(updateParams);
+        break;
     }
 
-    const found = this[`${entity}s`].get(id);
-    if (!found) {
-      return new DBError(DBErrors.UNPROCESSABLE_ENTITY);
-    }
-
-    if (!this.favorites[`${entity}s`].includes(id)) {
-      this.favorites[`${entity}s`].push(id);
-    }
-
-    return null;
-  }
-
-  remove(entity: 'track' | 'album' | 'artist', id: string) {
-    if (!validateUuid(id)) {
-      return new DBError(DBErrors.UUID);
-    }
-
-    const index = this.favorites[`${entity}s`].findIndex(
-      (curId) => curId === id,
-    );
-    if (index === -1) {
-      return new DBError(DBErrors.NOT_FOUND);
-    }
-
-    this.favorites[`${entity}s`].splice(index, 1);
     return null;
   }
 }

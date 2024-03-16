@@ -6,7 +6,7 @@ import { AlbumsModule } from './albums/albums.module';
 import { ArtistsModule } from './artists/artists.module';
 import { TracksModule } from './tracks/tracks.module';
 import { UsersModule } from './users/users.module';
-import { DatabaseService } from './database/database.service';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
@@ -17,8 +17,9 @@ import { DatabaseService } from './database/database.service';
     ArtistsModule,
     TracksModule,
     UsersModule,
+    PrismaModule,
   ],
   controllers: [AppController],
-  providers: [AppService, DatabaseService],
+  providers: [AppService],
 })
 export class AppModule {}

@@ -7,15 +7,16 @@ services:
     build:
       dockerfile: ./postgres/Dockerfile
     ports:
-     - ${DB_EXT_PORT}:${DB_INT_PORT}
+      - ${POSTGRES_EXT_PORT}:${POSTGRES_INT_PORT}
     environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     networks:
       - hls-net
     volumes:
-      - pgdata:/var/lib/postgresql/data
-      - pglogs:/var/log/postgresql
+      - pg-data:/var/lib/postgresql/data
+      - pg-logs:/var/log/postgresql
     restart: always
 
   hls:
@@ -32,6 +33,7 @@ services:
      - ${PORT}:${PORT}
     volumes:
       - hls-src:/usr/hls/src:rw
+      - hls-prisma:/usr/hls/prisma:rw
       - /usr/hls/node_modules
     networks:
       - hls-net
@@ -44,10 +46,15 @@ volumes:
       type: none
       device: ./src
       o: bind
-  pgdata:
-  pglogs:
+  hls-prisma:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./prisma
+      o: bind
+  pg-data:
+  pg-logs:
 
 networks:
   hls-net:
-    name: hls-net
     driver: bridge

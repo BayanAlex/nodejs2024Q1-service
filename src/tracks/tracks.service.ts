@@ -1,74 +1,50 @@
 import { Injectable } from '@nestjs/common';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
-import { DBError, DatabaseService } from 'src/database/database.service';
-import { DBErrors } from 'src/database/database.models';
-import { v4 as genUuid, validate as validateUuid } from 'uuid';
-import { Track } from './entities/track.entity';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { AppNotFoundException } from 'src/exceptions/exceptions.classes';
+import {
+  checkUuid,
+  processNotFoundException,
+} from 'src/exceptions/exceptions.functions';
 
 @Injectable()
 export class TracksService {
-  private tracks = this.database.tracks;
-
-  constructor(private database: DatabaseService) {}
+  constructor(private prisma: PrismaService) {}
 
   findAll() {
-    return Array.from(this.tracks.values());
+    return this.prisma.track.findMany();
   }
 
-  findOne(id: string) {
-    if (!validateUuid(id)) {
-      return new DBError(DBErrors.UUID);
-    }
-
-    const track = this.tracks.get(id);
+  async findOne(id: string) {
+    checkUuid(id);
+    const track = await this.prisma.track.findFirst({ where: { id } });
     if (!track) {
-      return new DBError(DBErrors.NOT_FOUND);
+      throw new AppNotFoundException('Track');
     }
     return track;
   }
 
   create(dto: CreateTrackDto) {
-    const track = new Track({
-      ...dto,
-      id: genUuid(),
-    });
-    this.tracks.set(track.id, track);
-    return track;
+    return this.prisma.track.create({ data: dto });
   }
 
-  update(id: string, dto: UpdateTrackDto) {
-    if (!validateUuid(id)) {
-      return new DBError(DBErrors.UUID);
+  async update(id: string, dto: UpdateTrackDto) {
+    checkUuid(id);
+    try {
+      return await this.prisma.track.update({ where: { id }, data: dto });
+    } catch (error) {
+      processNotFoundException(error, 'Track');
     }
-
-    const track = this.tracks.get(id);
-    if (!track) {
-      return new DBError(DBErrors.NOT_FOUND);
-    }
-
-    Object.keys(dto).forEach((param) => {
-      track[param] = dto[param];
-    });
-    return track;
   }
 
-  remove(id: string) {
-    if (!validateUuid(id)) {
-      return new DBError(DBErrors.UUID);
+  async remove(id: string) {
+    checkUuid(id);
+    try {
+      await this.prisma.track.delete({ where: { id } });
+    } catch (error) {
+      processNotFoundException(error, 'Track');
     }
-
-    const track = this.tracks.get(id);
-    if (!track) {
-      return new DBError(DBErrors.NOT_FOUND);
-    }
-
-    const favIndex = this.database.favorites.tracks.indexOf(id);
-    if (favIndex > -1) {
-      this.database.favorites.tracks.splice(favIndex, 1);
-    }
-
-    this.tracks.delete(track.id);
     return null;
   }
 }
