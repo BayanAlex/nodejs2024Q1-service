@@ -8,10 +8,8 @@ RUN npm i
 
 COPY . .
 
-RUN npx prisma generate
-
 ENV PORT 4000
 
 EXPOSE $PORT
 
-CMD [ "npm", "run", "start:dev" ]
+CMD npm run postgres:init && npm run start:dev

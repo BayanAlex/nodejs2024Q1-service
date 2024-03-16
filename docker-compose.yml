@@ -17,6 +17,11 @@ services:
     volumes:
       - pg-data:/var/lib/postgresql/data
       - pg-logs:/var/log/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
     restart: always
 
   hls:
@@ -26,7 +31,8 @@ services:
       context: .
       dockerfile: Dockerfile
     depends_on: 
-      - postgres
+      postgres:
+        condition: service_healthy
     env_file:
       - .env
     ports:
