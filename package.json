@@ -6,6 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "app:init": "npm i && npx prisma generate && npm run docker:start",
     "prebuild": "rimraf dist",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -18,8 +19,8 @@
     "docker:scan:hls": "docker scout cves alexshigida/rest-service:hls",
     "docker:scan:postgres": "docker scout cves alexshigida/rest-service:postgres",
     "postgres:init": "npx prisma migrate dev --name init && npx ts-node prisma/init-favs.ts",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest --testPathIgnorePatterns refresh.e2e.spec.ts auth --noStackTrace --runInBand",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test:auth": "cross-env TEST_MODE=auth jest --testPathIgnorePatterns refresh.e2e.spec.ts --noStackTrace --runInBand",
     "test:refresh": "cross-env TEST_MODE=auth jest --testPathPattern refresh.e2e.spec.ts --noStackTrace --runInBand",
     "test:watch": "jest --watch",
