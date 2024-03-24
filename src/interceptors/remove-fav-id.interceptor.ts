@@ -4,7 +4,6 @@ import {
   ExecutionContext,
   CallHandler,
 } from '@nestjs/common';
-import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 
 export interface Response<T> {
@@ -12,13 +11,8 @@ export interface Response<T> {
 }
 
 @Injectable()
-export class RemoveFavIdInterceptor<T>
-  implements NestInterceptor<T, Response<T>>
-{
-  intercept(
-    context: ExecutionContext,
-    next: CallHandler,
-  ): Observable<Response<T>> {
+export class RemoveFavIdInterceptor implements NestInterceptor {
+  intercept(context: ExecutionContext, next: CallHandler) {
     return next.handle().pipe(
       tap((data) => {
         if (!data) {
