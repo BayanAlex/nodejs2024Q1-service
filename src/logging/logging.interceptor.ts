@@ -11,14 +11,12 @@ import { Request, Response } from 'express';
 export function getRequestLogParams(request: Request) {
   const { method, url, query, body } = request;
   const requestBody = Object.keys(body).length ? { ...body } : null;
-  if (requestBody?.password) {
-    requestBody.password = '[hidden]';
-  }
-  if (requestBody?.newPassword) {
-    requestBody.newPassword = '[hidden]';
-  }
-  if (requestBody?.oldPassword) {
-    requestBody.oldPassword = '[hidden]';
+  if (requestBody) {
+    ['password', 'newPassword', 'oldPassword'].forEach((password) => {
+      if (requestBody[password]) {
+        requestBody[password] = '[hidden]';
+      }
+    });
   }
 
   const queryParams = Object.keys(query).length ? query : null;
