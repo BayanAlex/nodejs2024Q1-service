@@ -13,7 +13,7 @@ import {
 import { AlbumsService } from './albums.service';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
-import { RemoveFavIdInterceptor } from '../interceptors/remove-fav-id.interceptor';
+import { RemoveFavIdInterceptor } from 'src/interceptors/remove-fav-id.interceptor';
 
 @Controller('album')
 @UseInterceptors(RemoveFavIdInterceptor)

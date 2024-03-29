@@ -5,12 +5,15 @@ import {
   HttpException,
   BadRequestException,
   NotFoundException,
+  UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import {
   AppInvalidPasswordException,
   AppInvalidUuidException,
   AppNotFoundException,
+  AppUnauthorizedException,
   AppUnprocessableEntityException,
 } from 'src/exceptions/exceptions.classes';
 
@@ -22,11 +25,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     if (
       exception instanceof BadRequestException ||
+      exception instanceof UnauthorizedException ||
+      exception instanceof ForbiddenException ||
       exception instanceof NotFoundException ||
       exception instanceof AppInvalidUuidException ||
       exception instanceof AppInvalidPasswordException ||
       exception instanceof AppNotFoundException ||
-      exception instanceof AppUnprocessableEntityException
+      exception instanceof AppUnprocessableEntityException ||
+      exception instanceof AppUnauthorizedException
     ) {
       response.status(exception.getStatus()).json(exception.getResponse());
       return;

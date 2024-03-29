@@ -1,14 +1,15 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { FavoritesModule } from './favorites/favorites.module';
-import { AlbumsModule } from './albums/albums.module';
-import { ArtistsModule } from './artists/artists.module';
-import { TracksModule } from './tracks/tracks.module';
-import { UsersModule } from './users/users.module';
+import { FavoritesModule } from './endpoints/favorites/favorites.module';
+import { AlbumsModule } from './endpoints/albums/albums.module';
+import { ArtistsModule } from './endpoints/artists/artists.module';
+import { TracksModule } from './endpoints/tracks/tracks.module';
+import { UsersModule } from './endpoints/users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { LoggingModule } from './logging/logging.module';
 import { LoggingMiddleware } from './logging/logging.middleware';
+import { AuthModule } from './endpoints/auth/auth.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { LoggingMiddleware } from './logging/logging.middleware';
     UsersModule,
     PrismaModule,
     LoggingModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

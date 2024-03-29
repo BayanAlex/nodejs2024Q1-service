@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
+  UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 
@@ -19,12 +20,18 @@ export class AppNotFoundException extends NotFoundException {
 
 export class AppInvalidPasswordException extends ForbiddenException {
   constructor() {
-    super('Invalid old password');
+    super('Invalid password');
   }
 }
 
 export class AppUnprocessableEntityException extends UnprocessableEntityException {
   constructor(entity: string) {
     super(`${entity} not found`);
+  }
+}
+
+export class AppUnauthorizedException extends UnauthorizedException {
+  constructor() {
+    super('Login is needed for this action');
   }
 }

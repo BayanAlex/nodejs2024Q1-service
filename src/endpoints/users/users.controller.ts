@@ -12,7 +12,7 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
-import { UsersInterceptor } from 'src/users/users.interceptor';
+import { UsersInterceptor } from 'src/endpoints/users/users.interceptor';
 
 @Controller('user')
 @UseInterceptors(UsersInterceptor)
