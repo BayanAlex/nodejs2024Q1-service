@@ -7,6 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "app:init": "npm i && npx prisma generate && npm run docker:start",
+    "test:jwt": "npm run test:auth && npm run test:refresh",
     "prebuild": "rimraf dist",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

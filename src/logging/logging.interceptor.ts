@@ -10,7 +10,17 @@ import { Request, Response } from 'express';
 
 export function getRequestLogParams(request: Request) {
   const { method, url, query, body } = request;
-  const requestBody = Object.keys(body).length ? body : null;
+  const requestBody = Object.keys(body).length ? { ...body } : null;
+  if (requestBody?.password) {
+    requestBody.password = '[hidden]';
+  }
+  if (requestBody?.newPassword) {
+    requestBody.newPassword = '[hidden]';
+  }
+  if (requestBody?.oldPassword) {
+    requestBody.oldPassword = '[hidden]';
+  }
+
   const queryParams = Object.keys(query).length ? query : null;
   const logParams: [string, string, any, any, string | null, any] = [
     `Host: ${request.get('Host')}`,
