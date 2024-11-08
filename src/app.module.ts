@@ -16,8 +16,6 @@ import { AuthModule } from './endpoints/auth/auth.module';
     AlbumsModule,
     ArtistsModule,
     FavoritesModule,
-    AlbumsModule,
-    ArtistsModule,
     TracksModule,
     UsersModule,
     PrismaModule,
